@@ -21,6 +21,8 @@ const registerUser = asyncHandler(async (req, res) => {
   console.log("email: ", email);
 
   // perform validation
+  // The some() method checks if any of the fields (fullName, email, username, or password) is empty (i.e., it contains only whitespace).
+  // If at least one field is empty, some() returns true, and an error is thrown.
   if (
     [fullName, email, username, password].some((field) => field?.trim() === "")
   ) {
@@ -28,13 +30,34 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // check user is exists or not
-  const existedUser = User.findOne({
+
+  /*
+  In MongoDB, this query translates to:
+  { 
+    "$or": [
+      { "username": "<value_from_req.body.username>" }, 
+      { "email": "<value_from_req.body.email>" }
+    ] 
+  }
+
+  1. If either username or email exists in the database, the first matching document will be returned.
+  2. If no matching user is found, findOne() will return null.
+  3. $or: This is a MongoDB operator that allows you to specify multiple conditions. It will return documents that match at least one of the specified conditions.
+  */
+
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
 
   if (existedUser) throw new ApiError(409, "User with email or username already exists");
 
   // extract path of file (avatar , coverImage )
+  /* 
+  ?. -> optional chaining
+  1. By using the Multer middleware in your route, you're able to access uploaded files via the req.files object.
+  2. This is why you can get the file path from req.files?.avatar[0]?.path, which would not be possible in a standard Express request without file handling middleware.
+  3. normally, an Express req object only contains text and JSON data, but with Multer, it gets extended to include file uploads, allowing you to handle them easily in your route handlers.
+  */
   const avatarLocalPath = req.files?.avatar[0]?.path;
   const coverImageLocalPath = req.files?.coverImage[0]?.path
 
