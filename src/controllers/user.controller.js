@@ -15,12 +15,19 @@ const registerUser = asyncHandler(async (req, res) => {
   // check for user creation
   // if yes, return response
 
-  // Extract info from req.body
+
+
+
+  // 1. Extract info from req.body
+
+  // console.log(req.body)
   const { fullName, email, username, password } = req.body;
 
-  console.log("email: ", email);
+  // console.log("email: ", email);
 
-  // perform validation
+
+
+  // 2. perform validation
   // The some() method checks if any of the fields (fullName, email, username, or password) is empty (i.e., it contains only whitespace).
   // If at least one field is empty, some() returns true, and an error is thrown.
   if (
@@ -29,7 +36,9 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  // check user is exists or not
+
+
+  // 3. check user is exists or not
 
   /*
   In MongoDB, this query translates to:
@@ -51,30 +60,47 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (existedUser) throw new ApiError(409, "User with email or username already exists");
 
-  // extract path of file (avatar , coverImage )
+
+
+
+  // 4. extract path of file (avatar , coverImage )
   /* 
   ?. -> optional chaining
   1. By using the Multer middleware in your route, you're able to access uploaded files via the req.files object.
   2. This is why you can get the file path from req.files?.avatar[0]?.path, which would not be possible in a standard Express request without file handling middleware.
   3. normally, an Express req object only contains text and JSON data, but with Multer, it gets extended to include file uploads, allowing you to handle them easily in your route handlers.
   */
+
+  // console.log(req.files)
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path  // *ERROR
+
+  let coverImageLocalPath;
+  if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+    coverImageLocalPath = req.files.coverImage[0].path
+  }
+
 
   // check avatar is available or not
   if(!avatarLocalPath) throw new ApiError(400, "Avatar file is required");
 
 
-  // upload on cloudinary
+
+
+  // 5. upload on cloudinary
   const avatar = await uploadOnCloudinary(avatarLocalPath)
 
   const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
 
+  // console.log(`Avatar response by cloudinary :: ${JSON.stringify(avatar)}`)
+
   if(!avatar) throw new ApiError(400, "Avatar file is required");
 
   
-  // make entry of user in db
+
+  
+  // 6. make entry of user in db
   const user = await User.create({
     fullName,
     avatar: avatar.url,
