@@ -140,14 +140,23 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const { email, username, password } = req.body;
 
-  if (!username || !email)
+  if (!username && !email){
     throw new ApiError(400, "username or email is required");
+  }
+
+   // Here is an alternative of above code based on logic discussed in video:
+    // if (!(username || email)) {
+    //     throw new ApiError(400, "username or email is required")
+        
+    // }
 
   const user = await User.findOne({
     $or: [{ email }, { username }],
   });
 
   if (!user) throw new ApiError(404, "User does not exist");
+
+  // user have the access of self made method not this User. User is an object of mongoDB's mongoose
 
   const isPasswordValid = await user.isPasswordCorrect(password);
 
