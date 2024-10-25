@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteImageOnCloudinary, getPublicId, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -350,6 +350,20 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading on avatar");
   }
 
+
+  const oldAvatarUrl = req.user?.avatar
+  if(!oldAvatarUrl){
+    throw new ApiError(400, "Avatar does not exists in user")
+  }
+
+  const public_id = getPublicId(oldAvatarUrl)
+
+  if(!public_id) {
+    throw new ApiError(400, "Something went wrong while generating avatar public_Id")
+  }
+
+  await deleteImageOnCloudinary(public_id);
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -378,6 +392,19 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
   if (!coverImage.url) {
     throw new ApiError(400, "Error while uploading on coverImage");
   }
+
+  const oldCoverImageUrl = req.user?.coverImage
+  if(!oldCoverImageUrl){
+    throw new ApiError(400, "coverImage does not exists in user")
+  }
+
+  const public_id = getPublicId(oldCoverImageUrl)
+
+  if(!public_id) {
+    throw new ApiError(400, "Something went wrong while generating coverImage public_Id")
+  }
+
+  await deleteImageOnCloudinary(public_id);
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
