@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
-import { deleteImageOnCloudinary, getPublicId, uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteMediaOnCloudinary, getPublicId, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -362,7 +362,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Something went wrong while generating avatar public_Id")
   }
 
-  await deleteImageOnCloudinary(public_id);
+  await deleteMediaOnCloudinary(public_id);
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
@@ -404,7 +404,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Something went wrong while generating coverImage public_Id")
   }
 
-  await deleteImageOnCloudinary(public_id);
+  await deleteMediaOnCloudinary(public_id);
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
